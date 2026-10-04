@@ -1,7 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
-const { ALLOWED_ORIGINS, PORT, NODE_ENV } = require('./config/env');
+const { ALLOWED_ORIGINS, PORT, NODE_ENV, TRUST_PROXY_HOPS } = require('./config/env');
 const errorHandler = require('./middleware/errorHandler');
 const { globalLimiter, aiLimiter, writeLimiter } = require('./middleware/rate limiting.js');
 
@@ -16,6 +16,7 @@ const model = require('./config/gemini');
 
 const app = express();
 
+app.set('trust proxy', TRUST_PROXY_HOPS);
 app.use(helmet());
 app.use(cors({
   origin: function (origin, callback) {

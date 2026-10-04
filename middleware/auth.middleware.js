@@ -3,8 +3,8 @@ const AppError = require('./AppError');
 
 function extractToken(req) {
   const header = req.headers.authorization || '';
-  if (!header.startsWith('Bearer ')) return null;
-  return header.split('Bearer ')[1];
+  const match = /^Bearer\s+(\S+)$/i.exec(header);
+  return match ? match[1] : null;
 }
 
 async function verifyToken(req, res, next) {
@@ -15,7 +15,7 @@ async function verifyToken(req, res, next) {
   }
 
   try {
-    const decoded = await admin.auth().verifyIdToken(token);
+    const decoded = await admin.auth().verifyIdToken(token, true);
     req.user = decoded;
     next();
   } catch (error) {
@@ -31,7 +31,7 @@ async function optionalAuth(req, res, next) {
   }
 
   try {
-    const decoded = await admin.auth().verifyIdToken(token);
+    const decoded = await admin.auth().verifyIdToken(token, true);
     req.user = decoded;
   } catch (error) {
     req.user = null;

@@ -1,0 +1,8 @@
+.env
+.env.*
+!.env.example
+serviceAccountKey.json
+node_modules
+.git
+tmp-*.js
+out.txt

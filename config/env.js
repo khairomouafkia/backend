@@ -8,12 +8,13 @@ const toList = (value) => String(value || '')
   .filter(Boolean);
 
 const NODE_ENV = process.env.NODE_ENV || 'development';
+const trustProxyHops = Number(process.env.TRUST_PROXY_HOPS ?? (NODE_ENV === 'production' ? 1 : 0));
 const requiredNames = [
   'PORT',
   'SUPABASE_URL',
   'SUPABASE_KEY',
   'GEMINI_API_KEY',
-  'ALLOWED_ORIGINS',
+
 ];
 
 const missing = requiredNames.filter((name) => {
@@ -36,6 +37,10 @@ if (missing.length) {
 const port = Number(process.env.PORT);
 if (!Number.isInteger(port) || port < 1 || port > 65535) {
   throw new Error('PORT must be a valid integer between 1 and 65535.');
+}
+
+if (!Number.isInteger(trustProxyHops) || trustProxyHops < 0) {
+  throw new Error('TRUST_PROXY_HOPS must be a non-negative integer.');
 }
 
 const allowedOrigins = toList(process.env.ALLOWED_ORIGINS);
@@ -65,10 +70,11 @@ if (!process.env.FIREBASE_SERVICE_ACCOUNT_JSON && !fs.existsSync(resolvedPath)) 
 module.exports = {
   NODE_ENV,
   PORT: port,
+  ALLOWED_ORIGINS: allowedOrigins,
+  TRUST_PROXY_HOPS: trustProxyHops,
   SUPABASE_URL: process.env.SUPABASE_URL.trim(),
   SUPABASE_KEY: process.env.SUPABASE_KEY.trim(),
   GEMINI_API_KEY: process.env.GEMINI_API_KEY.trim(),
-  ALLOWED_ORIGINS: allowedOrigins,
   FIREBASE_SERVICE_ACCOUNT_JSON: firebaseServiceAccount,
   FIREBASE_SERVICE_ACCOUNT_PATH: firebaseServiceAccountPath,
   isProduction: NODE_ENV === 'production',
