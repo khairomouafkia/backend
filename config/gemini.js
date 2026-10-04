@@ -1,14 +1,13 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
+const { GEMINI_API_KEY } = require('./env');
 
-const apiKey = process.env.GEMINI_API_KEY;
+const preferredModel = 'gemini-3.8-flash';
+const requestedModel = process.env.GEMINI_MODEL;
+const modelName = requestedModel && /^gemini-3\./i.test(requestedModel)
+  ? requestedModel
+  : preferredModel;
 
-if (!apiKey) {
-  console.warn('⚠️  GEMINI_API_KEY غير موجود في ملف .env');
-}
+const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+const model = genAI.getGenerativeModel({ model: modelName });
 
-const genAI = new GoogleGenerativeAI(apiKey);
-
-// النموذج المستخدم للمحادثة (يمكن تغييره حسب الحاجة)
-const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-module.exports = model;
+module.exports = { model, modelName };

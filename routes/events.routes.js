@@ -5,10 +5,12 @@ const { verifyToken, requireAdmin, optionalAuth } = require('../middleware/auth.
 
 // القراءة متاحة للجميع (زوار أو مسجّلين)
 router.get('/', optionalAuth, eventsController.getEvents);
+router.get('/registrations/me', verifyToken, eventsController.getMyRegistrations);
 router.get('/:id', optionalAuth, eventsController.getEvent);
 
 // التسجيل في فعالية يتطلب تسجيل دخول (لكن ليس admin)
 router.post('/:id/register', verifyToken, eventsController.register);
+router.delete('/:id/register', verifyToken, eventsController.cancelRegistration);
 
 // إدارة الفعاليات (إنشاء/تعديل/حذف) - admin فقط
 router.post('/', verifyToken, requireAdmin, eventsController.addEvent);

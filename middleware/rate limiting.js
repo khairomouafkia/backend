@@ -1,30 +1,42 @@
-const rateLimit = {};
-const WINDOW_MS = 60 * 1000;
-const MAX_REQUESTS = 100;
+const rateLimit = require('express-rate-limit');
 
-app.use((req, res, next) => {
-  const key = req.ip || 'unknown';
-  const now = Date.now();
-
-  if (!rateLimit[key]) {
-    rateLimit[key] = { count: 1, start: now };
-    return next();
-  }
-
-  const window = rateLimit[key];
-  if (now - window.start > WINDOW_MS) {
-    window.count = 1;
-    window.start = now;
-    return next();
-  }
-
-  window.count += 1;
-  if (window.count > MAX_REQUESTS) {
-    return res.status(429).json({
+const globalLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 120,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
       success: false,
       message: 'تم تجاوز الحد المسموح للطلبات. حاول لاحقًا',
     });
-  }
-
-  next();
+  },
 });
+
+const aiLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      message: 'تم تجاوز الحد المسموح لطلبات الذكاء الاصطناعي. حاول لاحقًا',
+    });
+  },
+});
+
+const writeLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 40,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).json({
+      success: false,
+      message: 'تم تجاوز الحد المسموح للطلبات الكتابية. حاول لاحقًا',
+    });
+  },
+});
+
+module.exports = { globalLimiter, aiLimiter, writeLimiter };

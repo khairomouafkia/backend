@@ -1,22 +1,29 @@
+const { z } = require('zod');
 const aiService = require('../services/ai.service');
+const AppError = require('../middleware/AppError');
+const asyncHandler = require('../middleware/asyncHandler');
 
-// POST /api/ai/chat
-async function chat(req, res, next) {
-  try {
-    const { message, history } = req.body;
+const chatSchema = z.object({
+  message: z.string().trim().min(1).max(2000),
+  history: z.array(z.object({
+    role: z.enum(['user', 'model']),
+    content: z.string().optional(),
+    text: z.string().optional(),
+  })).max(20).optional().default([]),
+}).strict();
 
-    if (!message) {
-      return res.status(400).json({
-        success: false,
-        message: 'message مطلوب',
-      });
-    }
-
-    const reply = await aiService.getChatResponse(message, history || []);
-    res.status(200).json({ success: true, response: reply });
-  } catch (error) {
-    next(error);
+async function chat(req, res) {
+  const parsed = chatSchema.safeParse(req.body || {});
+  if (!parsed.success) {
+    throw new AppError(400, 'بيانات الرسالة غير صالحة', parsed.error.issues.map((issue) => ({
+      path: issue.path.join('.'),
+      message: issue.message,
+    })));
   }
+
+  const { message, history } = parsed.data;
+  const reply = await aiService.getChatResponse(message, history || []);
+  res.status(200).json({ success: true, data: { response: reply } });
 }
 
-module.exports = { chat };
+module.exports = { chat: asyncHandler(chat) };
